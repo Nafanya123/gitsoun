@@ -76,7 +76,6 @@ public class Stream {
             System.out.println(stream.toString());
             ArjArchiveEntry entry;
             String name;
-            StringBuilder result = new StringBuilder();
             while ((entry = stream.getNextEntry()) != null) {
                 name = entry.getName();
                 final File archiveEntry = new File(outt, name);
