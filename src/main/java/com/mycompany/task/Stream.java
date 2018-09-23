@@ -92,7 +92,7 @@ public class Stream {
             }
             stream.close();
         } catch (final IOException e) {
-            e.getMessage();
+            throw new IllegalArgumentException(e);
         }
 }
 }
