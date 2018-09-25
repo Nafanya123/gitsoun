@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mycompany</groupId>
-    <artifactId>Task</artifactId>
+    <artifactId>task</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <properties>
@@ -10,26 +10,40 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
-    
-    <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-compress -->
-    <dependencies>
-    <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-compress</artifactId>
-        <version>1.8</version>
-    </dependency>
-    
+    <!-- https://mvnrepository.com/artifact/org.xBaseJ/xbasej -->
+<dependencies>
     <dependency>
     <groupId>org.xBaseJ</groupId>
     <artifactId>xbasej</artifactId>
     <version>20091203</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-compress -->
+    <dependency>
+        <groupId>org.apache.ant</groupId>
+        <artifactId>ant</artifactId>
+      <version>1.8.1</version>
+      <type>jar</type>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+<!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+    <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+      <version>42.2.4.jre7</version>
     </dependency>
     
-    <!-- https://mvnrepository.com/artifact/postgresql/postgresql -->
-    <dependency>
-    <groupId>postgresql</groupId>
-    <artifactId>postgresql</artifactId>
-    <version>9.1-901-1.jdbc4</version>
-    </dependency>
-    </dependencies>
+    <!-- https://mvnrepository.com/artifact/net.sf.sevenzipjbinding/sevenzipjbinding-all-platforms -->
+<dependency>
+    <groupId>net.sf.sevenzipjbinding</groupId>
+    <artifactId>sevenzipjbinding-all-platforms</artifactId>
+    <version>9.20-2.00beta</version>
+</dependency>
+
+<!-- https://mvnrepository.com/artifact/net.sf.sevenzipjbinding/sevenzipjbinding -->
+<dependency>
+    <groupId>net.sf.sevenzipjbinding</groupId>
+    <artifactId>sevenzipjbinding</artifactId>
+    <version>9.20-2.00beta</version>
+</dependency>
+</dependencies>
 </project>

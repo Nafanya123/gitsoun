@@ -2,47 +2,49 @@ package com.mycompany.task;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
-import org.apache.commons.compress.archivers.ArchiveException;
-import org.apache.commons.compress.archivers.arj.ArjArchiveEntry;
-import org.apache.commons.compress.archivers.arj.ArjArchiveInputStream;
+import net.sf.sevenzipjbinding.IInArchive;
+import net.sf.sevenzipjbinding.ISequentialOutStream;
+import net.sf.sevenzipjbinding.SevenZip;
+import net.sf.sevenzipjbinding.SevenZipException;
+import net.sf.sevenzipjbinding.SevenZipNativeInitializationException;
+import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
+import net.sf.sevenzipjbinding.simple.ISimpleInArchive;
+import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
 import org.xBaseJ.DBF;
 import org.xBaseJ.fields.CharField;
 
 public class Stream {
-    private static final String INPUT_ZIP_FILE = "C:\\java_projects\\SOUN_DBF.ARJ";
-    private static final String OUTPUT_FOLDER = "C:\\java_projects\\UNZIPPED_file";
-    
-    private static final String dbf_f = "C:\\java_projects\\SOUN1.dbf";
+    private static final String INPUT = "C:\\java_projects\\SOUN_DBF.ARJ";
+    private static final String OUTPUT = "C:\\java_projects\\UNZIPPED_file";
     
     //Временная функция
-    public static void main( String[] args ) throws IOException, ArchiveException, Exception
+    public static void main( String[] args ) throws IOException, Exception
     {
-        Validate vl = new Validate("000026235");
-        vl.lep();
+       //Validate vl = new Validate("000026235");
         //vl.lep();
         //DBF_FF(dbf_f);
-        //unArj(INPUT_ZIP_FILE,OUTPUT_FOLDER);
+        unARJ(INPUT,OUTPUT);
     }
     
-    public static void DBF_FF(String dbf_file)
+    public static int DBF_read(String dbf_file)
     {
-        
         Connection c = null;
         Statement stmt;
-        
+        int i = 0;
         try
         {
             Class.forName("org.postgresql.Driver");
             c = DriverManager.getConnection("jdbc:postgresql://localhost:5432/hdd", "postgres", "root");
             
             c.setAutoCommit(false);
-            System.out.println("Соединение установлено");
             String sql;
             
             DBF dbf = new DBF(dbf_file);
@@ -50,7 +52,7 @@ public class Stream {
             CharField code = (CharField) dbf.getField("KOD");
             CharField shortname = (CharField) dbf.getField("NAIMK");
             CharField fullname = (CharField) dbf.getField("NAIM");
-            int i = 0;
+            
             for(i = 1; i < dbf.getRecordCount(); i++)
             {
                 dbf.setEncodingType("CP866");
@@ -61,38 +63,71 @@ public class Stream {
                 stmt.close();
                 c.commit();
             }
-            System.out.println("Успешно, кол-во записей: " + i);
-            
+            dbf.close();
         }catch(Exception e)
         {
            e.printStackTrace();
            System.out.println(e.getClass().getName() +":" + e.getMessage());
            System.exit(0);
         }
+        return i;
     }
-    public static void unArj(String arjFile, String outt) throws ArchiveException, Exception {
+    public static void unARJ(String arjFile, final String outt) throws InterruptedException
+    {
+        try {
+            //Инициализация собственной библиотеки
+            SevenZip.initSevenZipFromPlatformJAR();
 
-        try (ArjArchiveInputStream stream = new ArjArchiveInputStream(new FileInputStream(arjFile))) {
-            System.out.println(stream.toString());
-            ArjArchiveEntry entry;
-            String name;
-            while ((entry = stream.getNextEntry()) != null) {
-                name = entry.getName();
-                final File archiveEntry = new File(outt, name);
-                archiveEntry.getParentFile().mkdirs();
-                if (entry.isDirectory()) {
-                    archiveEntry.mkdir();
-                }
-                int tmp;
-                OutputStream out = new FileOutputStream(archiveEntry);
-                while ((tmp = stream.read()) != -1)
-                {
-                    out.write((char) tmp);
+            RandomAccessFile randomAccessFile = new RandomAccessFile(arjFile, "r");
+            IInArchive inArchive = SevenZip.openInArchive(null, new RandomAccessFileInStream(randomAccessFile));
+
+            ISimpleInArchive simpleInArchive = inArchive.getSimpleInterface();
+            for (ISimpleInArchiveItem item : simpleInArchive.getArchiveItems()) {
+                if (!item.isFolder()) {
+                    final File archiveEntry = new File(outt, item.getPath());
+                    archiveEntry.getParentFile().mkdirs();
+                    final OutputStream out = new FileOutputStream(archiveEntry);
+                    item.extractSlow(new ISequentialOutStream() {
+                        public int write(byte[] data) throws SevenZipException {
+                            for (byte b : data) {
+                                try {
+                                    //Наполнение фаила полученными данными с архива
+                                    out.write((char) b);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            return data.length;
+                        }
+                    });
                 }
             }
-            stream.close();
-        } catch (final IOException e) {
-            throw new IllegalArgumentException(e);
+        } catch (SevenZipNativeInitializationException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (SevenZipException e) {
+            e.printStackTrace();
         }
-}
+        DBF_read(outt + "\\SOUN1.dbf");
+        Delete(new File(outt));      
+    }
+
+    // Рекурсивное удаление
+    private static void Delete(File file)
+    {
+        if(!file.exists())
+        {
+            return;
+        }
+
+        if(file.isDirectory())
+        {
+            for(File f : file.listFiles())
+            {
+                Delete(f);
+            }
+        }
+        file.delete();
+    }
 }
