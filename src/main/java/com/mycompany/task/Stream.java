@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Statement;
 import net.sf.sevenzipjbinding.IInArchive;
 import net.sf.sevenzipjbinding.ISequentialOutStream;
@@ -22,19 +23,30 @@ import org.xBaseJ.DBF;
 import org.xBaseJ.fields.CharField;
 
 public class Stream {
-    private static final String INPUT = "C:\\java_projects\\SOUN_DBF.ARJ";
-    private static final String OUTPUT = "C:\\java_projects\\UNZIPPED_file";
     
-    //Временная функция
-    public static void main( String[] args ) throws IOException, Exception
+    static String url = null;
+    static String user = null;
+    static String pass = null;
+    
+    /**
+     * Конструктор - создание нового объекта с определенными значениями
+     * @param url - ссылка на бд
+     * @param user - имя пользователя бд
+     * @param pass - пароль бд
+     */
+    public Stream(String url, String user, String pass)
     {
-       //Validate vl = new Validate("000026235");
-        //vl.lep();
-        //DBF_FF(dbf_f);
-        unARJ(INPUT,OUTPUT);
+        this.url = url;
+        this.user = user;
+        this.pass = pass;
     }
     
-    public static int DBF_read(String dbf_file)
+    /**
+     * Функция записывающая в бд данные из фаила с расширением dbf
+     * @param dbf_file - ссылка на фаил
+     * @return возвращает кол-во добавленных в бд записей
+     */
+    private int DBF_read(String dbf_file)
     {
         Connection c = null;
         Statement stmt;
@@ -42,8 +54,7 @@ public class Stream {
         try
         {
             Class.forName("org.postgresql.Driver");
-            c = DriverManager.getConnection("jdbc:postgresql://localhost:5432/hdd", "postgres", "root");
-            
+            c = DriverManager.getConnection(url, user, pass);
             c.setAutoCommit(false);
             String sql;
             
@@ -72,7 +83,15 @@ public class Stream {
         }
         return i;
     }
-    public static void unARJ(String arjFile, final String outt) throws InterruptedException
+    
+    /**
+     * Функция выполняет декомпрессию ARJ архива, а так же высов методов
+     * DBF_read и Delete
+     * @param arjFile - ссылка на ARJ архив
+     * @param outt - ссылка, где будет произведена декомпрессия
+     * После декомпрессии происходит считывание фаила в бд, после чего все фаилы удаляются.
+     */
+    public void unARJ(String arjFile, final String outt)
     {
         try {
             //Инициализация собственной библиотеки
@@ -114,7 +133,11 @@ public class Stream {
     }
 
     // Рекурсивное удаление
-    private static void Delete(File file)
+    /**
+     * Функция рекурсивного удаления
+     * @param file - параметр передаваемого фаила
+     */
+    private void Delete(File file)
     {
         if(!file.exists())
         {
